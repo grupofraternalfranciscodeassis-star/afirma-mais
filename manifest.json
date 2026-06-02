@@ -1,8 +1,8 @@
 {
-  "name": "Afirma+ Afirmações Positivas",
+  "name": "Afirma+ Afirma\u00e7\u00f5es Positivas",
   "short_name": "Afirma+",
-  "description": "Pratique afirmações positivas e transforme sua mente",
-  "start_url": "/",
+  "description": "Pratique afirma\u00e7\u00f5es positivas e transforme sua mente",
+  "start_url": "/afirma-mais/",
   "display": "standalone",
   "background_color": "#0a0d1a",
   "theme_color": "#9b6cf5",
@@ -20,5 +20,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "scope": "/afirma-mais/"
 }
