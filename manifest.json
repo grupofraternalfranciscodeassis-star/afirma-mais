@@ -1,0 +1,24 @@
+{
+  "name": "Afirma+ Afirmações Positivas",
+  "short_name": "Afirma+",
+  "description": "Pratique afirmações positivas e transforme sua mente",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0d1a",
+  "theme_color": "#9b6cf5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
