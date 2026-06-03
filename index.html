@@ -306,7 +306,7 @@ select option{background:#0d1428;color:var(--text)}
       <div class="ttl gt">Afirma+</div>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
-      <div class="badge">&#11088; <span id="h-streak">7 dias</span></div>
+      <div class="badge">&#11088; <span id="h-streak">0 dias</span></div>
       <button class="ib" onclick="goTo('splash')" title="Sobre o app" style="color:rgba(160,185,255,.7);min-width:40px;min-height:40px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r=".5" fill="currentColor"/></svg>
       </button>
@@ -319,12 +319,12 @@ select option{background:#0d1428;color:var(--text)}
     </div>
     <button class="btn-p" style="margin-top:0;margin-bottom:13px" onclick="startSession(affirmations.length?affirmations[0].id:0)">&#9654; Iniciar sess&atilde;o</button>
     <div class="sg">
-      <div class="sc"><div class="sv gt" id="h-today">142</div><div class="sl">Repeti&ccedil;&otilde;es hoje</div></div>
+      <div class="sc"><div class="sv gt" id="h-today">0</div><div class="sl">Repeti&ccedil;&otilde;es hoje</div></div>
       <div class="sc"><div class="sv gt">7</div><div class="sl">Dias seguidos</div></div>
     </div>
     <div class="sc" style="width:100%;margin-bottom:13px">
       <div style="display:flex;justify-content:space-between;font-size:var(--font-size-xs);color:var(--muted)">
-        <span>Meta di&aacute;ria</span><span style="color:#7ee8b5">142/50 &#10003;</span>
+        <span>Meta di&aacute;ria</span><span style="color:#7ee8b5" id="h-meta-txt">0/50 &#8203;</span>
       </div>
       <div class="pb-w"><div class="pb" style="width:100%"></div></div>
     </div>
@@ -450,7 +450,7 @@ select option{background:#0d1428;color:var(--text)}
     </div>
     <div class="sg">
       <div class="sc"><div class="sv gt" id="st-tot">1.240</div><div class="sl">Total</div></div>
-      <div class="sc"><div class="sv gt" id="st-td">142</div><div class="sl">Hoje</div></div>
+      <div class="sc"><div class="sv gt" id="st-td">0</div><div class="sl">Hoje</div></div>
     </div>
     <div class="sc" style="margin-bottom:12px;width:100%">
       <div class="sec" style="margin-top:0">Afirma&ccedil;&atilde;o favorita</div>
@@ -586,7 +586,31 @@ const LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeIAAAIGCAYAAACI1Iyq
 document.querySelectorAll('.logo').forEach(img => img.src = LOGO);
 
 let affirmations = [];
-let todayReps=0, sessCount=0, curAff=null, editId=null, nid=1;
+let sessCount=0, curAff=null, editId=null, nid=1;
+
+// --- Persistência de datas e streak ---
+function getTodayStr(){ return new Date().toISOString().slice(0,10); }
+
+function loadDailyData(){
+  const stored = JSON.parse(localStorage.getItem('afirmaDaily') || '{}');
+  const today = getTodayStr();
+  if(stored.date !== today){
+    // Novo dia: verifica se ontem houve prática (para manter streak)
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+    const hadYesterday = stored.date === yesterday && (stored.reps||0) > 0;
+    return {
+      date: today,
+      reps: 0,
+      streak: hadYesterday ? (stored.streak||0) + 1 : 0
+    };
+  }
+  return { date: stored.date || today, reps: stored.reps||0, streak: stored.streak||0 };
+}
+
+function saveDailyData(data){ localStorage.setItem('afirmaDaily', JSON.stringify(data)); }
+
+let daily = loadDailyData();
+let todayReps = daily.reps;
 const SN = {splash:'s0',home:'s-home',list:'s-list',create:'s-create',session:'s-session',stats:'s-stats',settings:'s-settings',teoria:'s-teoria'};
 
 function initStars(){
@@ -636,6 +660,17 @@ function logoHTML(sz){
 }
 
 function renderHome(){
+  // Atualiza contadores
+  document.getElementById('h-streak').textContent = daily.streak + (daily.streak === 1 ? ' dia' : ' dias');
+  document.getElementById('h-today').textContent = todayReps;
+  document.getElementById('st-td').textContent = todayReps;
+  const meta = affirmations[0] ? affirmations[0].meta : 50;
+  const metaTxt = document.getElementById('h-meta-txt');
+  if(metaTxt){
+    const done = todayReps >= meta;
+    metaTxt.textContent = `${todayReps}/${meta} ${done ? '✓' : ''}`;
+    metaTxt.style.color = done ? '#7ee8b5' : '#a78bfa';
+  }
   document.getElementById('h-aff').textContent = affirmations[0] ? affirmations[0].text : 'Crie sua primeira afirmação positiva.';
   document.getElementById('h-list').innerHTML = affirmations.slice(0,3).map(a=>`
     <div class="ai" style="cursor:pointer" onclick="startSession(${a.id})">
@@ -731,6 +766,12 @@ function tap(){
   sessCount++;
   document.getElementById('sess-cnt').textContent = sessCount;
   todayReps++;
+  daily.reps = todayReps;
+  if(daily.reps === 1 && daily.streak === 0){
+    // Primeira repetição do dia: inicia streak em 1
+    daily.streak = Math.max(1, daily.streak);
+  }
+  saveDailyData(daily);
   const a=affirmations.find(x=>x.id===curAff.id);
   if(a){
     a.reps++;
@@ -740,7 +781,7 @@ function tap(){
   }
   const o=document.querySelector('.tap-outer');
   o.style.transform='scale(.9)';
-  setTimeout(()=>o.style.transform='',130);
+  setTimeout(()=>{o.style.transform=''; renderHome();},130);
 }
 
 function validateCr(v){
