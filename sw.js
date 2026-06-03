@@ -1,4 +1,4 @@
-const CACHE = 'afirma-v1';
+const CACHE = 'afirma-v2';
 const FILES = ['/', '/index.html'];
 
 self.addEventListener('install', e => {
